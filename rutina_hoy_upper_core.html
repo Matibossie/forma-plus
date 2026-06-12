@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hoy — Hombros, Pecho, Espalda y Abdomen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f13;
+    color: #f0f0f0;
+    min-height: 100vh;
+    padding: 16px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    padding: 24px 0 20px;
+  }
+  header .label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+  }
+  header .subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-top: 6px;
+  }
+
+  .phase-badge {
+    display: inline-block;
+    background: #1e1e28;
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #aaa;
+    margin: 6px 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: #1a1a22;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+  }
+  .progress-bar-bg {
+    background: #2a2a36;
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80, #22d3ee);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* Rest Timer */
+  #rest-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+  }
+  #rest-overlay.active { display: flex; }
+  #rest-overlay .rest-label {
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 12px;
+  }
+  #rest-overlay .next-label {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+  #rest-overlay .next-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 32px;
+  }
+  .ring-container {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    margin-bottom: 28px;
+  }
+  .ring-container svg {
+    transform: rotate(-90deg);
+  }
+  .ring-bg { fill: none; stroke: #2a2a36; stroke-width: 8; }
+  .ring-progress { fill: none; stroke: #4ade80; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .ring-time {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .ring-time small { font-size: 13px; color: #888; font-weight: 400; }
+  .skip-btn {
+    background: #1e1e28;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 10px 28px;
+    border-radius: 24px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .skip-btn:hover { background: #2a2a36; color: #fff; }
+
+  /* Exercise cards */
+  .exercise-card {
+    background: #1a1a22;
+    border: 1px solid #252530;
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .exercise-card.active {
+    border-color: #4ade80;
+  }
+  .exercise-card.done {
+    opacity: 0.5;
+    border-color: #1e1e28;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    cursor: pointer;
+    gap: 14px;
+  }
+  .ex-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #252530;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #888;
+    flex-shrink: 0;
+  }
+  .exercise-card.active .ex-number {
+    background: #4ade80;
+    color: #0f0f13;
+  }
+  .exercise-card.done .ex-number {
+    background: #252530;
+    color: #4ade80;
+  }
+  .ex-info { flex: 1; }
+  .ex-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f0f0f0;
+  }
+  .ex-meta {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+  }
+  .ex-expand {
+    font-size: 18px;
+    color: #555;
+    transition: transform 0.2s;
+  }
+  .card-header.open .ex-expand { transform: rotate(180deg); }
+
+  .card-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid #252530;
+  }
+  .card-body.open { display: block; }
+
+  .cue-section {
+    margin-top: 14px;
+  }
+  .cue-title {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 6px;
+  }
+  .cue-text {
+    font-size: 13px;
+    color: #bbb;
+    line-height: 1.6;
+  }
+  .mistake {
+    font-size: 12px;
+    color: #f87171;
+    background: rgba(248,113,113,0.07);
+    border-left: 2px solid #f87171;
+    padding: 6px 10px;
+    border-radius: 0 6px 6px 0;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* Exercise diagrams */
+  .diagram-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .diagram-panel {
+    flex: 1;
+    background: #14141a;
+    border: 1px solid #252530;
+    border-radius: 10px;
+    padding: 8px 6px 10px;
+    text-align: center;
+  }
+  .diagram-panel svg {
+    width: 100%;
+    height: auto;
+    max-width: 130px;
+    display: block;
+    margin: 0 auto;
+  }
+  .diagram-label {
+    font-size: 11px;
+    color: #777;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+  .diagram-arrow {
+    font-size: 18px;
+    color: #444;
+    flex: 0 0 auto;
+  }
+
+  /* Sets tracker */
+  .sets-section {
+    margin-top: 16px;
+  }
+  .sets-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 10px;
+  }
+  .sets-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .set-dot {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    background: #252530;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #666;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .set-dot .set-num { font-size: 16px; font-weight: 700; color: #aaa; }
+  .set-dot:hover { border-color: #4ade80; color: #4ade80; }
+  .set-dot:hover .set-num { color: #4ade80; }
+  .set-dot.done-set {
+    border-color: #4ade80;
+    background: rgba(74,222,128,0.08);
+    color: #4ade80;
+  }
+  .set-dot.done-set .set-num { color: #4ade80; }
+
+  /* Warm-up / cooldown phases */
+  .phase-block {
+    background: #1a1a22;
+    border: 1px solid #252530;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .phase-block h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .phase-block .phase-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .phase-block ul {
+    list-style: none;
+    padding: 0;
+  }
+  .phase-block ul li {
+    font-size: 13px;
+    color: #aaa;
+    padding: 4px 0;
+    border-bottom: 1px solid #252530;
+    display: flex;
+    justify-content: space-between;
+  }
+  .phase-block ul li:last-child { border-bottom: none; }
+  .phase-block ul li span { color: #666; }
+
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    margin: 24px 0 12px;
+  }
+
+  .tip-box {
+    background: rgba(34,211,238,0.06);
+    border: 1px solid rgba(34,211,238,0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #67e8f9;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .tip-box strong { color: #22d3ee; }
+
+  .complete-btn {
+    display: none;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(90deg, #4ade80, #22d3ee);
+    color: #0f0f13;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: 20px;
+    letter-spacing: 0.5px;
+  }
+  .complete-btn.visible { display: block; }
+
+  .done-screen {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .done-screen.visible { display: block; }
+  .done-screen .emoji { font-size: 64px; margin-bottom: 16px; }
+  .done-screen h2 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .done-screen p { font-size: 14px; color: #888; line-height: 1.7; }
+  .done-screen .stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin: 24px 0;
+  }
+  .done-screen .stat { text-align: center; }
+  .done-screen .stat-val { font-size: 28px; font-weight: 700; color: #4ade80; }
+  .done-screen .stat-lbl { font-size: 11px; color: #666; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">Rutina de hoy</div>
+  <h1>Hombros · Pecho · Espalda · Abdomen</h1>
+  <div class="subtitle">~45 min · RPE 5-6/10 · No es tu rutina de siempre, es solo para hoy</div>
+  <div style="margin-top:12px">
+    <span class="phase-badge">🔥 Entrada en calor</span>
+    <span class="phase-badge">💪 5 ejercicios</span>
+    <span class="phase-badge">😴 pausas variables</span>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span>Progreso</span>
+    <span id="progress-text">0 / 15 series</span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<div class="tip-box">
+  <strong>Nota:</strong> Esto es un cambio puntual para hoy. Tu programa progresivo de full body sigue intacto — la próxima sesión volvés a esa rutina con los pesos donde los dejaste.
+</div>
+
+<!-- WARM UP -->
+<div class="section-title">Entrada en calor — 8 min</div>
+<div class="phase-block">
+  <h3><span class="phase-icon" style="background:#1f2937">🚶</span> Activación general</h3>
+  <ul>
+    <li>Cinta / bicicleta a ritmo suave <span>5 min</span></li>
+    <li>Círculos de brazos (adelante y atrás) <span>1 min</span></li>
+    <li>Rotaciones de tronco <span>1 min</span></li>
+    <li>Movilidad de hombros con banda o sin peso <span>1 min</span></li>
+  </ul>
+</div>
+
+<!-- MAIN WORKOUT -->
+<div class="section-title">Trabajo principal — 32 min</div>
+
+<div id="exercises-container"></div>
+
+<button class="complete-btn" id="complete-btn" onclick="showDone()">✓ Entrenamiento completado</button>
+
+<div class="done-screen" id="done-screen">
+  <div class="emoji">🎉</div>
+  <h2>¡Listo por hoy!</h2>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val">15</div>
+      <div class="stat-lbl">Series</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="done-time">—</div>
+      <div class="stat-lbl">Minutos</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">5</div>
+      <div class="stat-lbl">Ejercicios</div>
+    </div>
+  </div>
+  <p>Hidratate, comé algo con proteína y descansá bien. Mañana podés volver a tu rutina progresiva habitual sin problema — hoy trabajaste otros grupos musculares.</p>
+</div>
+
+<!-- COOLDOWN -->
+<div class="section-title">Enfriamiento — 5 min</div>
+<div class="phase-block">
+  <h3><span class="phase-icon" style="background:#1f2937">🧘</span> Elongación estática</h3>
+  <ul>
+    <li>Estiramiento de pecho contra pared <span>30s c/lado</span></li>
+    <li>Estiramiento de hombro cruzando el brazo <span>30s c/lado</span></li>
+    <li>Estiramiento de espalda alta (abrazo) <span>30s</span></li>
+    <li>Estiramiento de abdomen (cobra suave) <span>30s</span></li>
+    <li>Respiración profunda <span>1 min</span></li>
+  </ul>
+</div>
+
+<!-- REST OVERLAY -->
+<div id="rest-overlay">
+  <div class="rest-label">Pausa activa</div>
+  <div class="next-label">próximo ejercicio</div>
+  <div class="next-name" id="rest-next-name">—</div>
+  <div class="ring-container">
+    <svg viewBox="0 0 180 180" width="180" height="180">
+      <circle class="ring-bg" cx="90" cy="90" r="80"/>
+      <circle class="ring-progress" id="ring-progress" cx="90" cy="90" r="80"
+        stroke-dasharray="502.65"
+        stroke-dashoffset="0"/>
+    </svg>
+    <div class="ring-time">
+      <span id="rest-seconds">90</span>
+      <small>segundos</small>
+    </div>
+  </div>
+  <button class="skip-btn" onclick="skipRest()">Saltar pausa →</button>
+</div>
+
+<script>
+const FIGURE = "#aaaaaa";
+const WEIGHT_COLOR = "#4ade80";
+const FLOOR = "#333333";
+
+const exercises = [
+  {
+    name: "Press militar con mancuernas",
+    sets: 3, reps: "10 reps",
+    rest: 90,
+    muscles: "Hombros · Tríceps",
+    weight: "Mancuernas livianas (5–8 kg)",
+    cues: "Sentado o de pie, mancuernas a la altura de los hombros con las palmas hacia adelante. Empujá hacia arriba hasta casi extender los brazos, sin bloquear los codos. Bajá controlado contando 3 segundos. Mantené el core firme.",
+    mistake: "⚠️ No arquees la espalda baja para ayudarte a empujar. Si te tenés que arquear, el peso es demasiado.",
+    sub: "Press en máquina de hombros, o con bandas elásticas.",
+    diagram: {
+      a: { label: "Posición inicial", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <line x1="20" y1="130" x2="90" y2="130" stroke="${FLOOR}" stroke-width="2"/>
+        <circle cx="55" cy="25" r="9" fill="${FIGURE}"/>
+        <line x1="55" y1="34" x2="55" y2="72" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="72" x2="48" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="72" x2="62" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="37" x2="40" y2="42" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="38" cy="40" r="7" fill="${WEIGHT_COLOR}"/>
+      </svg>` },
+      b: { label: "Posición final", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <line x1="20" y1="130" x2="90" y2="130" stroke="${FLOOR}" stroke-width="2"/>
+        <circle cx="55" cy="25" r="9" fill="${FIGURE}"/>
+        <line x1="55" y1="34" x2="55" y2="72" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="72" x2="48" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="72" x2="62" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="37" x2="50" y2="12" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="50" cy="9" r="7" fill="${WEIGHT_COLOR}"/>
+      </svg>` }
+    }
+  },
+  {
+    name: "Press con mancuernas (pecho)",
+    sets: 3, reps: "10 reps",
+    rest: 90,
+    muscles: "Pecho · Hombros · Tríceps",
+    weight: "Mancuernas livianas (6–10 kg c/u)",
+    cues: "Tumbate en el banco, pies apoyados en el piso. Mancuernas a la altura del pecho, codos a 45° del cuerpo (no a 90°). Empujá hacia arriba sin bloquear los codos. Bajá controlado contando 3 segundos.",
+    mistake: "⚠️ No arquees la espalda baja para ayudarte. El movimiento debe venir solo del pecho y los brazos.",
+    sub: "Flexiones de rodillas en el piso si no hay banco disponible.",
+    diagram: {
+      a: { label: "Posición inicial", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="90" width="95" height="8" fill="${FLOOR}"/>
+        <circle cx="22" cy="84" r="9" fill="${FIGURE}"/>
+        <line x1="31" y1="90" x2="78" y2="90" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="78" y1="90" x2="92" y2="108" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="92" y1="108" x2="85" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="48" y1="90" x2="48" y2="70" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="48" y1="70" x2="40" y2="58" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="40" cy="55" r="7" fill="${WEIGHT_COLOR}"/>
+      </svg>` },
+      b: { label: "Posición final", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="90" width="95" height="8" fill="${FLOOR}"/>
+        <circle cx="22" cy="84" r="9" fill="${FIGURE}"/>
+        <line x1="31" y1="90" x2="78" y2="90" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="78" y1="90" x2="92" y2="108" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="92" y1="108" x2="85" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="48" y1="90" x2="48" y2="40" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="48" cy="35" r="7" fill="${WEIGHT_COLOR}"/>
+      </svg>` }
+    }
+  },
+  {
+    name: "Remo con mancuerna",
+    sets: 3, reps: "10 reps c/lado",
+    rest: 90,
+    muscles: "Espalda · Bíceps · Core",
+    weight: "Mancuerna liviana (8–14 kg)",
+    cues: "Apoyá una mano y rodilla en el banco. La espalda paralela al piso. Colgá la mancuerna del brazo libre. Jalá el codo hacia el techo, manteniendo la espalda quieta. Bajar lento, sentir el estiramiento en la espalda.",
+    mistake: "⚠️ No rotes el torso para ayudarte a subir el peso. Si lo hacés, el peso es demasiado pesado.",
+    sub: "Remo sentado en la máquina de cable o remo en polea baja.",
+    diagram: {
+      a: { label: "Posición inicial", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <line x1="15" y1="130" x2="95" y2="130" stroke="${FLOOR}" stroke-width="2"/>
+        <rect x="20" y="98" width="40" height="6" fill="${FLOOR}"/>
+        <circle cx="78" cy="38" r="9" fill="${FIGURE}"/>
+        <line x1="78" y1="47" x2="52" y2="76" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="52" y1="76" x2="68" y2="74" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="52" y1="76" x2="42" y2="98" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="42" y1="98" x2="38" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="52" y1="76" x2="64" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="60" y1="82" x2="58" y2="112" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="58" cy="116" r="7" fill="${WEIGHT_COLOR}"/>
+      </svg>` },
+      b: { label: "Posición final", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <line x1="15" y1="130" x2="95" y2="130" stroke="${FLOOR}" stroke-width="2"/>
+        <rect x="20" y="98" width="40" height="6" fill="${FLOOR}"/>
+        <circle cx="78" cy="38" r="9" fill="${FIGURE}"/>
+        <line x1="78" y1="47" x2="52" y2="76" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="52" y1="76" x2="68" y2="74" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="52" y1="76" x2="42" y2="98" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="42" y1="98" x2="38" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="52" y1="76" x2="64" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="60" y1="82" x2="74" y2="84" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="74" y1="84" x2="76" y2="72" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="76" cy="69" r="7" fill="${WEIGHT_COLOR}"/>
+      </svg>` }
+    }
+  },
+  {
+    name: "Elevaciones laterales",
+    sets: 3, reps: "12 reps",
+    rest: 60,
+    muscles: "Hombros (deltoides lateral)",
+    weight: "Mancuernas muy livianas (2–4 kg)",
+    cues: "De pie, mancuernas a los costados del cuerpo, palmas hacia adentro, codos levemente flexionados. Levantá los brazos hacia los costados hasta la altura de los hombros, formando una 'T' con el cuerpo. Bajá controlado contando 2 segundos.",
+    mistake: "⚠️ No uses impulso ni encojas los hombros hacia las orejas. Si balanceás el cuerpo para subir el peso, es demasiado pesado.",
+    sub: "Sin peso, solo el movimiento, o con bandas elásticas livianas.",
+    diagram: {
+      a: { label: "Posición inicial", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <line x1="20" y1="130" x2="90" y2="130" stroke="${FLOOR}" stroke-width="2"/>
+        <circle cx="55" cy="18" r="9" fill="${FIGURE}"/>
+        <line x1="55" y1="27" x2="55" y2="75" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="75" x2="45" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="75" x2="65" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="33" x2="40" y2="70" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="33" x2="70" y2="70" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="38" cy="73" r="6" fill="${WEIGHT_COLOR}"/>
+        <circle cx="72" cy="73" r="6" fill="${WEIGHT_COLOR}"/>
+      </svg>` },
+      b: { label: "Posición final", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <line x1="20" y1="130" x2="90" y2="130" stroke="${FLOOR}" stroke-width="2"/>
+        <circle cx="55" cy="18" r="9" fill="${FIGURE}"/>
+        <line x1="55" y1="27" x2="55" y2="75" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="75" x2="45" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="75" x2="65" y2="128" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="33" x2="20" y2="33" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="55" y1="33" x2="90" y2="33" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="17" cy="33" r="6" fill="${WEIGHT_COLOR}"/>
+        <circle cx="93" cy="33" r="6" fill="${WEIGHT_COLOR}"/>
+      </svg>` }
+    }
+  },
+  {
+    name: "Abdominales (crunch)",
+    sets: 3, reps: "15 reps",
+    rest: 45,
+    muscles: "Abdomen (recto abdominal)",
+    weight: "Peso corporal",
+    cues: "Acostado boca arriba, rodillas flexionadas, pies apoyados en el piso. Manos cruzadas en el pecho o detrás de la cabeza sin tirar del cuello. Subí los hombros del piso contrayendo el abdomen. Bajá controlado sin golpear la cabeza contra el piso.",
+    mistake: "⚠️ No tires del cuello con las manos. El recorrido es corto — no hace falta sentarte completo.",
+    sub: "Crunch con piernas elevadas, o plancha si te molesta el cuello.",
+    diagram: {
+      a: { label: "Posición inicial", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="120" x2="105" y2="120" stroke="${FLOOR}" stroke-width="2"/>
+        <circle cx="20" cy="108" r="9" fill="${FIGURE}"/>
+        <line x1="28" y1="112" x2="70" y2="112" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="70" y1="112" x2="80" y2="95" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="80" y1="95" x2="95" y2="110" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+      </svg>` },
+      b: { label: "Posición final", svg: `<svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="120" x2="105" y2="120" stroke="${FLOOR}" stroke-width="2"/>
+        <circle cx="28" cy="95" r="9" fill="${FIGURE}"/>
+        <line x1="35" y1="100" x2="70" y2="112" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="70" y1="112" x2="80" y2="95" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="80" y1="95" x2="95" y2="110" stroke="${FIGURE}" stroke-width="5" stroke-linecap="round"/>
+      </svg>` }
+    }
+  }
+];
+
+let completedSets = {};
+let startTime = Date.now();
+let restTimer = null;
+
+function initSets() {
+  exercises.forEach((_, i) => {
+    completedSets[i] = 0;
+  });
+}
+
+function renderExercises() {
+  const container = document.getElementById('exercises-container');
+  container.innerHTML = '';
+  exercises.forEach((ex, i) => {
+    const done = completedSets[i] === ex.sets;
+    const active = !done && Object.values(completedSets).slice(0, i).every((v, idx) => v === exercises[idx].sets);
+    const card = document.createElement('div');
+    card.className = `exercise-card ${done ? 'done' : active ? 'active' : ''}`;
+    card.id = `card-${i}`;
+
+    const dots = Array.from({length: ex.sets}, (_, s) => `
+      <div class="set-dot ${completedSets[i] > s ? 'done-set' : ''}" onclick="completeSet(${i}, ${s})">
+        <span class="set-num">${s + 1}</span>
+        <span>serie</span>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="card-header ${i === 0 ? 'open' : ''}" onclick="toggleCard(${i}, this)">
+        <div class="ex-number">${done ? '✓' : i + 1}</div>
+        <div class="ex-info">
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-meta">${ex.sets} series × ${ex.reps} · ${ex.muscles}</div>
+        </div>
+        <div class="ex-expand">▾</div>
+      </div>
+      <div class="card-body ${i === 0 ? 'open' : ''}" id="body-${i}">
+        <div class="cue-section">
+          <div class="cue-title">💡 Cómo hacerlo</div>
+          <div class="cue-text">${ex.cues}</div>
+        </div>
+        <div class="cue-section">
+          <div class="cue-title">📐 Movimiento</div>
+          <div class="diagram-row">
+            <div class="diagram-panel">
+              ${ex.diagram.a.svg}
+              <div class="diagram-label">${ex.diagram.a.label}</div>
+            </div>
+            <div class="diagram-arrow">→</div>
+            <div class="diagram-panel">
+              ${ex.diagram.b.svg}
+              <div class="diagram-label">${ex.diagram.b.label}</div>
+            </div>
+          </div>
+        </div>
+        <div class="cue-section">
+          <div class="cue-title">⚖️ Peso sugerido</div>
+          <div class="cue-text">${ex.weight}</div>
+        </div>
+        <div class="cue-section">
+          <div class="cue-title">Error común</div>
+          <div class="mistake">${ex.mistake}</div>
+        </div>
+        <div class="cue-section">
+          <div class="cue-title">🔄 Sustitución</div>
+          <div class="cue-text" style="color:#777">${ex.sub}</div>
+        </div>
+        <div class="sets-section">
+          <div class="sets-label">Marcar series completadas</div>
+          <div class="sets-row">${dots}</div>
+        </div>
+        <div style="font-size:12px;color:#555;margin-top:12px;text-align:right">
+          ⏱ Pausa: ${ex.rest} seg entre series
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  updateProgress();
+}
+
+function toggleCard(i, header) {
+  const body = document.getElementById(`body-${i}`);
+  const isOpen = body.classList.contains('open');
+  document.querySelectorAll('.card-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.card-header').forEach(h => h.classList.remove('open'));
+  if (!isOpen) {
+    body.classList.add('open');
+    header.classList.add('open');
+  }
+}
+
+function completeSet(exIdx, setIdx) {
+  if (completedSets[exIdx] !== setIdx) return;
+  completedSets[exIdx]++;
+
+  const nextExIdx = completedSets[exIdx] < exercises[exIdx].sets ? exIdx : exIdx + 1;
+  const nextName = nextExIdx < exercises.length ? exercises[nextExIdx].name : null;
+  const restTime = exercises[exIdx].rest;
+
+  renderExercises();
+
+  if (completedSets[exIdx] === exercises[exIdx].sets && exIdx + 1 < exercises.length) {
+    setTimeout(() => {
+      const nextHeader = document.querySelector(`#card-${exIdx + 1} .card-header`);
+      if (nextHeader) toggleCard(exIdx + 1, nextHeader);
+    }, 200);
+  }
+
+  const allDone = exercises.every((ex, i) => completedSets[i] === ex.sets);
+  if (allDone) {
+    document.getElementById('complete-btn').classList.add('visible');
+    return;
+  }
+
+  startRest(restTime, nextName || 'Próximo');
+}
+
+function startRest(seconds, nextName) {
+  clearInterval(restTimer);
+  const overlay = document.getElementById('rest-overlay');
+  const secEl = document.getElementById('rest-seconds');
+  const ring = document.getElementById('ring-progress');
+  const circumference = 502.65;
+
+  document.getElementById('rest-next-name').textContent = nextName;
+  overlay.classList.add('active');
+
+  let remaining = seconds;
+  secEl.textContent = remaining;
+  ring.style.strokeDashoffset = 0;
+
+  restTimer = setInterval(() => {
+    remaining--;
+    secEl.textContent = remaining;
+    const offset = circumference * (1 - remaining / seconds);
+    ring.style.strokeDashoffset = offset;
+    if (remaining <= 0) {
+      clearInterval(restTimer);
+      overlay.classList.remove('active');
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+  }, 1000);
+}
+
+function skipRest() {
+  clearInterval(restTimer);
+  document.getElementById('rest-overlay').classList.remove('active');
+}
+
+function updateProgress() {
+  const total = exercises.reduce((a, e) => a + e.sets, 0);
+  const done = Object.values(completedSets).reduce((a, v) => a + v, 0);
+  document.getElementById('progress-text').textContent = `${done} / ${total} series`;
+  document.getElementById('progress-fill').style.width = `${(done / total) * 100}%`;
+}
+
+function showDone() {
+  document.getElementById('complete-btn').classList.remove('visible');
+  document.getElementById('done-screen').classList.add('visible');
+  const mins = Math.round((Date.now() - startTime) / 60000);
+  document.getElementById('done-time').textContent = mins;
+  document.getElementById('done-screen').scrollIntoView({ behavior: 'smooth' });
+}
+
+initSets();
+renderExercises();
+</script>
+</body>
+</html>
